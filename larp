@@ -21,8 +21,23 @@ echo "exec kitty --override font_size=${FONT} --title larp-window -e bash -c \"\
 chmod +x "$WRAPPER"
 
 # Create simple scripts because hypr-layout crashes on spaces inside {}
+# Custom Fastfetch config
+cat > /tmp/larp-fastfetch.jsonc << 'EOF2'
+{
+  "logo": {
+    "type": "small"
+  },
+  "modules": [
+    "title", "separator", "os", "host", "kernel", "shell",
+    "display", "de", "wm", "wmtheme", "theme", "icons", "font",
+    "cpu", "gpu", "memory", "disk", "localip", "battery",
+    "break", "colors"
+  ]
+}
+EOF2
+
 echo '#!/usr/bin/env bash' > /tmp/larp-fetch
-echo 'fastfetch; echo; read -n1 -p "Press any key..."; exec bash' >> /tmp/larp-fetch
+echo 'fastfetch -c /tmp/larp-fastfetch.jsonc; echo; read -n1 -p "Press any key..."; exec bash' >> /tmp/larp-fetch
 chmod +x /tmp/larp-fetch
 
 echo '#!/usr/bin/env bash' > /tmp/larp-pipes
@@ -37,4 +52,4 @@ chmod +x /tmp/larp-cmatrix
 # Note: cavalier is NOT enclosed in {} so it runs directly as a GUI app
 hypr-layout \
   --terminal "$WRAPPER" \
-  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, cavalier))'
+  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, "flatpak run org.nickvision.cavalier"))'
