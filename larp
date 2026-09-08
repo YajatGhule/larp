@@ -53,7 +53,15 @@ chmod +x /tmp/larp-cmatrix
 # Pane 4 (Bottom-Right): CAVA audio visualizer
 cat > /tmp/larp-cava << 'EOF_CAVA'
 #!/usr/bin/env bash
-cava || bash
+stop_audio() {
+  [[ -f /tmp/larp_audio.pid ]] && kill "$(cat /tmp/larp_audio.pid)" 2>/dev/null
+  pkill -f "mpv.*Colliding Stars" 2>/dev/null
+  rm -f /tmp/larp_audio.pid 2>/dev/null
+}
+trap stop_audio EXIT INT TERM HUP
+
+cava
+stop_audio
 EOF_CAVA
 chmod +x /tmp/larp-cava
 
