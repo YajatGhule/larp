@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ── CONFIGURE THIS ─────────────────────
 AUDIO_PATH="/home/loopero/Downloads/Colliding Stars - Marzuku.mp3"
-FONT="${FONT:-28.0}"
+FONT="${FONT:-10.0}"
 # ───────────────────────────────────────
 
 # Set system master volume to 70%
