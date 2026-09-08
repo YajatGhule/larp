@@ -41,11 +41,11 @@ echo 'fastfetch -c /tmp/larp-fastfetch.jsonc; echo; read -n1 -p "Press any key..
 chmod +x /tmp/larp-fetch
 
 echo '#!/usr/bin/env bash' > /tmp/larp-pipes
-echo 'pipes.sh || bash' >> /tmp/larp-pipes
+echo 'pipes.sh -f 100 -p 3 || bash' >> /tmp/larp-pipes
 chmod +x /tmp/larp-pipes
 
 echo '#!/usr/bin/env bash' > /tmp/larp-cmatrix
-echo 'cmatrix -b || bash' >> /tmp/larp-cmatrix
+echo 'cmatrix -b -u 2 || bash' >> /tmp/larp-cmatrix
 chmod +x /tmp/larp-cmatrix
 
 # Launch the 4 Hyprland windows (3 terminal panes, 1 GUI app: cavalier)
