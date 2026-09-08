@@ -18,55 +18,40 @@ if [[ -f "$AUDIO_PATH" ]]; then
   echo $! > /tmp/larp_audio.pid
 fi
 
-# Create a wrapper script to enforce the font size ONLY for these terminal panes
+# Create a wrapper script to enforce the font size and margins for these terminal panes
 WRAPPER="/tmp/larp-wrapper"
 cat > "$WRAPPER" << EOF_WRAP
 #!/usr/bin/env bash
-exec kitty --override font_size=${FONT} --title larp-window "\$@"
+exec kitty --override font_size=${FONT} --override window_margin_width=4 --override window_padding_width=0 --title larp-window "\$@"
 EOF_WRAP
 chmod +x "$WRAPPER"
 
-# Custom Fastfetch config
-cat > /tmp/larp-fastfetch.jsonc << EOF_FETCH_CONF
-{
-  "logo": {
-    "type": "small"
-  },
-  "modules": [
-    "title", "separator", "os", "host", "kernel", "shell",
-    "display", "de", "wm", "wmtheme", "theme", "icons", "font",
-    "cpu", "gpu", "memory", "disk", "localip", "battery",
-    "break", "colors"
-  ]
-}
-EOF_FETCH_CONF
-
-# Pane 1 (Top-Left): Fastfetch
-cat > /tmp/larp-fetch << EOF_FETCH
+# Pane 1 (Top-Left): Normal Fastfetch
+cat > /tmp/larp-fetch << 'EOF_FETCH'
 #!/usr/bin/env bash
-fastfetch -c /tmp/larp-fastfetch.jsonc
-echo
-read -n1 -p "Press any key..."
-exec bash
+fastfetch
+# Keep displayed cleanly; pressing any key or Ctrl+C opens interactive shell
+read -s -n 1 2>/dev/null || true
+exec "${SHELL:-fish}"
 EOF_FETCH
 chmod +x /tmp/larp-fetch
 
 # Pane 2 (Bottom-Left): Animated pipes
-cat > /tmp/larp-pipes << EOF_PIPES
+cat > /tmp/larp-pipes << 'EOF_PIPES'
 #!/usr/bin/env bash
 pipes.sh -f 100 -p 3 || bash
 EOF_PIPES
 chmod +x /tmp/larp-pipes
 
 # Pane 3 (Top-Right): CMatrix
-cat > /tmp/larp-cmatrix << EOF_CMATRIX
+cat > /tmp/larp-cmatrix << 'EOF_CMATRIX'
 #!/usr/bin/env bash
 cmatrix -b -u 2 || bash
 EOF_CMATRIX
 chmod +x /tmp/larp-cmatrix
 
 # Pane 4 (Bottom-Right): CAVA audio visualizer
-cat > /tmp/larp-cava << EOF_CAVA
+cat > /tmp/larp-cava << 'EOF_CAVA'
 #!/usr/bin/env bash
 cava || bash
 EOF_CAVA
