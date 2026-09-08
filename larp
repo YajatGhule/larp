@@ -1,28 +1,33 @@
 #!/usr/bin/env bash
 # ── CONFIGURE THIS ─────────────────────
 AUDIO_PATH="/home/loopero/Downloads/Colliding Stars - Marzuku.mp3"
-FONT=28.0
+FONT="${FONT:-28.0}"
 # ───────────────────────────────────────
 
 # Set system master volume to 70%
 wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.70
 
-# Kill any previous larp audio
+# Clean up any previous larp audio and visualizer processes
 [[ -f /tmp/larp_audio.pid ]] && kill "$(cat /tmp/larp_audio.pid)" 2>/dev/null
+pkill -f "mpv.*Colliding Stars" 2>/dev/null
+pkill -f /tmp/larp- 2>/dev/null
 
-# Play song once in bg at 70% volume
-mpv --no-video --volume=70 --pause=no "$AUDIO_PATH" > /dev/null 2>&1 &
-echo $! > /tmp/larp_audio.pid
+# Play song in background at 70% volume if audio file exists
+if [[ -f "$AUDIO_PATH" ]]; then
+  mpv --no-video --volume=70 --pause=no "$AUDIO_PATH" > /dev/null 2>&1 &
+  echo $! > /tmp/larp_audio.pid
+fi
 
 # Create a wrapper script to enforce the font size ONLY for these terminal panes
 WRAPPER="/tmp/larp-wrapper"
-echo '#!/usr/bin/env bash' > "$WRAPPER"
-echo "exec kitty --override font_size=${FONT} --title larp-window -e bash -c \"\$*\"" >> "$WRAPPER"
+cat > "$WRAPPER" << EOF_WRAP
+#!/usr/bin/env bash
+exec kitty --override font_size=${FONT} --title larp-window "\$@"
+EOF_WRAP
 chmod +x "$WRAPPER"
 
-# Create simple scripts because hypr-layout crashes on spaces inside {}
 # Custom Fastfetch config
-cat > /tmp/larp-fastfetch.jsonc << 'EOF2'
+cat > /tmp/larp-fastfetch.jsonc << EOF_FETCH_CONF
 {
   "logo": {
     "type": "small"
@@ -34,22 +39,41 @@ cat > /tmp/larp-fastfetch.jsonc << 'EOF2'
     "break", "colors"
   ]
 }
-EOF2
+EOF_FETCH_CONF
 
-echo '#!/usr/bin/env bash' > /tmp/larp-fetch
-echo 'fastfetch -c /tmp/larp-fastfetch.jsonc; echo; read -n1 -p "Press any key..."; exec bash' >> /tmp/larp-fetch
+# Pane 1 (Top-Left): Fastfetch
+cat > /tmp/larp-fetch << EOF_FETCH
+#!/usr/bin/env bash
+fastfetch -c /tmp/larp-fastfetch.jsonc
+echo
+read -n1 -p "Press any key..."
+exec bash
+EOF_FETCH
 chmod +x /tmp/larp-fetch
 
-echo '#!/usr/bin/env bash' > /tmp/larp-pipes
-echo 'pipes.sh -f 100 -p 3 || bash' >> /tmp/larp-pipes
+# Pane 2 (Bottom-Left): Animated pipes
+cat > /tmp/larp-pipes << EOF_PIPES
+#!/usr/bin/env bash
+pipes.sh -f 100 -p 3 || bash
+EOF_PIPES
 chmod +x /tmp/larp-pipes
 
-echo '#!/usr/bin/env bash' > /tmp/larp-cmatrix
-echo 'cmatrix -b -u 2 || bash' >> /tmp/larp-cmatrix
+# Pane 3 (Top-Right): CMatrix
+cat > /tmp/larp-cmatrix << EOF_CMATRIX
+#!/usr/bin/env bash
+cmatrix -b -u 2 || bash
+EOF_CMATRIX
 chmod +x /tmp/larp-cmatrix
 
-# Launch the 4 Hyprland windows (3 terminal panes, 1 GUI app: cavalier)
-# Note: cavalier is NOT enclosed in {} so it runs directly as a GUI app
+# Pane 4 (Bottom-Right): CAVA audio visualizer
+cat > /tmp/larp-cava << EOF_CAVA
+#!/usr/bin/env bash
+cava || bash
+EOF_CAVA
+chmod +x /tmp/larp-cava
+
+# Launch the 4 Hyprland windows in a 2x2 grid
 hypr-layout \
+  --timeout 10000 \
   --terminal "$WRAPPER" \
-  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, "flatpak run org.nickvision.cavalier"))'
+  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, {/tmp/larp-cava}))'
