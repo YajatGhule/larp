@@ -11,6 +11,8 @@ wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.70
 [[ -f /tmp/larp_audio.pid ]] && kill "$(cat /tmp/larp_audio.pid)" 2>/dev/null
 pkill -f "mpv.*Colliding Stars" 2>/dev/null
 pkill -f /tmp/larp- 2>/dev/null
+pkill -f "pipes.sh" 2>/dev/null
+pkill -f "cmatrix -b -u 2" 2>/dev/null
 
 # Play song in background at 70% volume if audio file exists
 if [[ -f "$AUDIO_PATH" ]]; then
