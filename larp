@@ -12,7 +12,7 @@ wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.70
 pkill -f "mpv.*Colliding Stars" 2>/dev/null
 pkill -f /tmp/larp- 2>/dev/null
 pkill -f "pipes.sh" 2>/dev/null
-pkill -f "cmatrix -b -u 2" 2>/dev/null
+pkill -f "cmatrix" 2>/dev/null
 
 # Play song in background at 70% volume if audio file exists
 if [[ -f "$AUDIO_PATH" ]]; then
@@ -48,7 +48,7 @@ chmod +x /tmp/larp-pipes
 # Pane 3 (Top-Right): CMatrix
 cat > /tmp/larp-cmatrix << 'EOF_CMATRIX'
 #!/usr/bin/env bash
-cmatrix -b -u 2 || bash
+cmatrix -b -r || bash
 EOF_CMATRIX
 chmod +x /tmp/larp-cmatrix
 
