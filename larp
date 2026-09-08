@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ── CONFIGURE THIS ─────────────────────
 AUDIO_PATH="/home/loopero/Downloads/Colliding Stars - Marzuku.mp3"
-FONT=16.0
+FONT=28.0
 # ───────────────────────────────────────
 
 # Set system master volume to 70%
@@ -13,6 +13,12 @@ wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.70
 # Play song once in bg at 70% volume
 mpv --no-video --volume=70 --pause=no "$AUDIO_PATH" > /dev/null 2>&1 &
 echo $! > /tmp/larp_audio.pid
+
+# Create a wrapper script to enforce the font size ONLY for these terminal panes
+WRAPPER="/tmp/larp-wrapper"
+echo '#!/usr/bin/env bash' > "$WRAPPER"
+echo "exec kitty --override font_size=${FONT} --title larp-window -e bash -c \"\$*\"" >> "$WRAPPER"
+chmod +x "$WRAPPER"
 
 # Create simple scripts because hypr-layout crashes on spaces inside {}
 echo '#!/usr/bin/env bash' > /tmp/larp-fetch
@@ -27,17 +33,8 @@ echo '#!/usr/bin/env bash' > /tmp/larp-cmatrix
 echo 'cmatrix -b || bash' >> /tmp/larp-cmatrix
 chmod +x /tmp/larp-cmatrix
 
-echo '#!/usr/bin/env bash' > /tmp/larp-cava
-echo 'cava || bash' >> /tmp/larp-cava
-chmod +x /tmp/larp-cava
-
-# Create the kitty wrapper that sets the font
-WRAPPER="/tmp/larp-kitty"
-echo '#!/usr/bin/env bash' > "$WRAPPER"
-echo "exec kitty --override font_size=${FONT} --title larp-window -e \"\$@\"" >> "$WRAPPER"
-chmod +x "$WRAPPER"
-
-# Launch the 4 Hyprland windows using hypr-layout
+# Launch the 4 Hyprland windows (3 terminal panes, 1 GUI app: cavalier)
+# Note: cavalier is NOT enclosed in {} so it runs directly as a GUI app
 hypr-layout \
   --terminal "$WRAPPER" \
-  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, {/tmp/larp-cava}))'
+  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, cavalier))'
