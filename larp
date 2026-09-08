@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# ── CONFIGURE THIS ─────────────────────
+AUDIO_PATH="/home/loopero/Downloads/Colliding Stars - Marzuku.mp3"
+FONT=16.0
+# ───────────────────────────────────────
+
+# Set system master volume to 70%
+wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.70
+
+# Kill any previous larp audio
+[[ -f /tmp/larp_audio.pid ]] && kill "$(cat /tmp/larp_audio.pid)" 2>/dev/null
+
+# Play song once in bg at 70% volume
+mpv --no-video --volume=70 --pause=no "$AUDIO_PATH" > /dev/null 2>&1 &
+echo $! > /tmp/larp_audio.pid
+
+# Create a wrapper script because hypr-layout doesn't accept arguments in --terminal
+WRAPPER="/tmp/larp-wrapper"
+echo '#!/usr/bin/env bash' > "$WRAPPER"
+echo 'exec bash -c "$*"' >> "$WRAPPER"
+chmod +x "$WRAPPER"
+
+# Launch the 4 Hyprland windows using hypr-layout
+hypr-layout \
+  --terminal "$WRAPPER" \
+  "h( \
+    v({\"kitty --override font_size=$FONT --title larp-window -e bash -c 'fastfetch; echo; read -n1 -p \\\"Press any key...\\\"; exec bash'\"}, \
+      {\"kitty --override font_size=$FONT --title larp-window -e bash -c 'pipes.sh || bash'\"}), \
+    v({\"kitty --override font_size=$FONT --title larp-window -e bash -c 'cmatrix -b || bash'\"}, \
+      {\"kitty --override font_size=$FONT --title larp-window -e bash -c 'cava || bash'\"}) \
+  )"
