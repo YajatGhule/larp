@@ -14,18 +14,30 @@ wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.70
 mpv --no-video --volume=70 --pause=no "$AUDIO_PATH" > /dev/null 2>&1 &
 echo $! > /tmp/larp_audio.pid
 
-# Create a wrapper script because hypr-layout doesn't accept arguments in --terminal
-WRAPPER="/tmp/larp-wrapper"
+# Create simple scripts because hypr-layout crashes on spaces inside {}
+echo '#!/usr/bin/env bash' > /tmp/larp-fetch
+echo 'fastfetch; echo; read -n1 -p "Press any key..."; exec bash' >> /tmp/larp-fetch
+chmod +x /tmp/larp-fetch
+
+echo '#!/usr/bin/env bash' > /tmp/larp-pipes
+echo 'pipes.sh || bash' >> /tmp/larp-pipes
+chmod +x /tmp/larp-pipes
+
+echo '#!/usr/bin/env bash' > /tmp/larp-cmatrix
+echo 'cmatrix -b || bash' >> /tmp/larp-cmatrix
+chmod +x /tmp/larp-cmatrix
+
+echo '#!/usr/bin/env bash' > /tmp/larp-cava
+echo 'cava || bash' >> /tmp/larp-cava
+chmod +x /tmp/larp-cava
+
+# Create the kitty wrapper that sets the font
+WRAPPER="/tmp/larp-kitty"
 echo '#!/usr/bin/env bash' > "$WRAPPER"
-echo 'exec bash -c "$*"' >> "$WRAPPER"
+echo "exec kitty --override font_size=${FONT} --title larp-window -e \"\$@\"" >> "$WRAPPER"
 chmod +x "$WRAPPER"
 
 # Launch the 4 Hyprland windows using hypr-layout
 hypr-layout \
   --terminal "$WRAPPER" \
-  "h( \
-    v({\"kitty --override font_size=$FONT --title larp-window -e bash -c 'fastfetch; echo; read -n1 -p \\\"Press any key...\\\"; exec bash'\"}, \
-      {\"kitty --override font_size=$FONT --title larp-window -e bash -c 'pipes.sh || bash'\"}), \
-    v({\"kitty --override font_size=$FONT --title larp-window -e bash -c 'cmatrix -b || bash'\"}, \
-      {\"kitty --override font_size=$FONT --title larp-window -e bash -c 'cava || bash'\"}) \
-  )"
+  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, {/tmp/larp-cava}))'
