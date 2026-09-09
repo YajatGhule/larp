@@ -4,8 +4,22 @@ AUDIO_PATH="/home/loopero/Downloads/Colliding Stars - Marzuku.mp3"
 FONT="${FONT:-8.0}"
 # ───────────────────────────────────────
 
-# Set system master volume to 70%
-wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.70
+# Set system and speaker volume to 70% smoothly (avoids quickshell illegal increment warning)
+ALC_SINK="alsa_output.pci-0000_00_1f.3.analog-stereo"
+cur_vol=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | awk '{print int($2 * 100)}')
+[[ -z "$cur_vol" ]] && cur_vol=50
+target_vol=70
+
+if (( cur_vol < target_vol )); then
+  for (( v = cur_vol + 5; v <= target_vol; v += 5 )); do
+    wpctl set-volume @DEFAULT_AUDIO_SINK@ "${v}%" 2>/dev/null
+    pactl set-sink-volume "$ALC_SINK" "${v}%" 2>/dev/null
+    sleep 0.03
+  done
+fi
+wpctl set-volume @DEFAULT_AUDIO_SINK@ "${target_vol}%" 2>/dev/null
+pactl set-sink-volume "$ALC_SINK" "${target_vol}%" 2>/dev/null
+pactl set-sink-volume @DEFAULT_SINK@ "${target_vol}%" 2>/dev/null
 
 # Clean up any previous larp audio and visualizer processes
 [[ -f /tmp/larp_audio.pid ]] && kill "$(cat /tmp/larp_audio.pid)" 2>/dev/null
@@ -14,9 +28,9 @@ pkill -f /tmp/larp- 2>/dev/null
 pkill -f "pipes.sh" 2>/dev/null
 pkill -f "cmatrix" 2>/dev/null
 
-# Play song in background at 70% volume if audio file exists
+# Play song on ALC257 Analog speaker
 if [[ -f "$AUDIO_PATH" ]]; then
-  mpv --no-video --volume=70 --pause=no "$AUDIO_PATH" > /dev/null 2>&1 &
+  mpv --no-video --volume=70 --pause=no --audio-device="pipewire/$ALC_SINK" "$AUDIO_PATH" > /dev/null 2>&1 &
   echo $! > /tmp/larp_audio.pid
 fi
 
