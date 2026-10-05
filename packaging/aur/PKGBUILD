@@ -1,4 +1,4 @@
-# Maintainer: Yajat Ghule <nlol26486@gmail.com>
+# Maintainer: Yajat Ghule <yajatmay@gmail.com>
 pkgname=larp-hyprland
 pkgver=1.0.0
 pkgrel=1
@@ -13,7 +13,7 @@ optdepends=('mpv: play music while larp runs'
             'wtype: larp-ws workspace launcher')
 conflicts=('larp')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('f6e7ebc50e5873444a6d5bc7a3c9b97760f0b96e8c16afa607961aa6bf29da79')
 
 package() {
   cd "larp-$pkgver"
