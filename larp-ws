@@ -1,0 +1,40 @@
+#!/usr/bin/env fish
+
+# Ensure environment variables for Wayland & Hyprland
+if test -z "$WAYLAND_DISPLAY"
+    set -gx WAYLAND_DISPLAY wayland-1
+end
+if test -z "$XDG_RUNTIME_DIR"
+    set -gx XDG_RUNTIME_DIR /run/user/1000
+end
+if test -z "$HYPRLAND_INSTANCE_SIGNATURE"
+    set -gx HYPRLAND_INSTANCE_SIGNATURE (ls -1 /run/user/1000/hypr/ 2>/dev/null | head -n 1)
+end
+
+# Ensure paths
+fish_add_path ~/.local/bin /usr/local/bin
+
+# 1. Save currently focused workspace ID
+set prev_ws (hyprctl activeworkspace -j | jq -r '.id')
+
+# 2. Switch to workspace 10
+hyprctl dispatch 'hl.dsp.focus({ workspace = 10 })'
+sleep 0.3
+
+# 3. Close the existing terminal/window on workspace 10
+hyprctl dispatch 'hl.dsp.window.close()'
+sleep 0.3
+
+# 4. Open a new terminal
+kitty &
+
+# 5. Wait for Kitty to focus, type 'larp', and press Enter
+sleep 1.2
+wtype "larp"
+wtype -k Return
+
+# 6. Wait 1 minute (60 seconds)
+sleep 60
+
+# 7. Switch back to the previous workspace
+hyprctl dispatch "hl.dsp.focus({ workspace = $prev_ws })"
