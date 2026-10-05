@@ -188,6 +188,20 @@ AUDIO_PATH="" larp                              # No music
 FONT=9 VOLUME=80 AUDIO_PATH=/tmp/song.mp3 larp # Multiple overrides
 ```
 
+### Updating
+
+Check for a new version:
+```bash
+larp-update --check
+```
+
+Update to the latest:
+```bash
+larp-update
+```
+
+This clones the latest release from GitHub and re-runs the installer, keeping your config file intact.
+
 ### Advanced: larp-ws
 
 `larp-ws` launches larp on workspace 10. It's useful as a macro key or scheduled launcher:

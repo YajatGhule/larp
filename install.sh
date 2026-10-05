@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installer for larp.
 #
-#   ./install.sh                 install to ~/.local/bin
+#   ./install.sh                 install to ~/.local/bin (prompts for audio file)
 #   ./install.sh --prefix /usr/local
 #   ./install.sh --no-deps       skip distro packages
 #   ./install.sh --uninstall
@@ -115,7 +115,7 @@ fi
 # Use the files next to this script when run from a clone; download them when piped
 src_dir=""
 [[ -f "${BASH_SOURCE[0]:-}" ]] && src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for f in larp larp-ws; do
+for f in larp larp-ws larp-update; do
   if [[ -n "$src_dir" && -f "$src_dir/$f" ]]; then
     as_prefix install -Dm755 "$src_dir/$f" "$BIN/$f"
   else
@@ -123,7 +123,7 @@ for f in larp larp-ws; do
     as_prefix install -Dm755 "$tmp" "$BIN/$f"; rm -f "$tmp"
   fi
 done
-info "installed larp and larp-ws to $BIN"
+info "installed larp, larp-ws and larp-update to $BIN"
 
 if [[ ! -f "$CONFIG_DIR/config" ]]; then
   mkdir -p "$CONFIG_DIR"
@@ -132,7 +132,21 @@ if [[ ! -f "$CONFIG_DIR/config" ]]; then
   else
     curl -fsSL -o "$CONFIG_DIR/config" "$REPO_RAW/config.example"
   fi
-  info "created $CONFIG_DIR/config (set AUDIO_PATH to a song for music)"
+  info "created $CONFIG_DIR/config"
+
+  # Prompt for audio file path
+  printf '\n\033[1;34m::\033[0m Set up audio file (optional):\n'
+  read -p "  Path to audio file (or press Enter to skip): " audio_path
+  if [[ -n "$audio_path" ]]; then
+    # Expand ~ to home directory
+    audio_path="${audio_path/#\~/$HOME}"
+    if [[ -f "$audio_path" ]]; then
+      sed -i "s|^AUDIO_PATH=\"\"|AUDIO_PATH=\"$audio_path\"|" "$CONFIG_DIR/config"
+      info "audio file set to: $audio_path"
+    else
+      warn "file not found: $audio_path (you can set it later in $CONFIG_DIR/config)"
+    fi
+  fi
 fi
 
 case ":$PATH:" in *":$BIN:"*) ;; *) warn "$BIN is not in your PATH; add it to run 'larp'" ;; esac

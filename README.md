@@ -56,7 +56,12 @@ You can also set any of these for a single run, for example `FONT=10 larp`.
 larp
 ```
 
-`larp-ws` is a fish script that runs larp on workspace 10. It closes the window that is there, opens kitty, types `larp`, waits 60 seconds and then goes back to the workspace you were on.
+### Commands
+
+- `larp` — launch the 2×2 grid
+- `larp-ws` — launch larp on workspace 10 (fish script; closes current window, returns you after 60 seconds)
+- `larp-update` — update to the latest version from GitHub
+  - `larp-update --check` — show the latest version without updating
 
 ## License
 

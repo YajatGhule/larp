@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# larp-update: Update larp to the latest version from GitHub.
+# Usage: larp-update [--check]
+#   --check  Show the latest version without updating
+
+set -euo pipefail
+
+REPO="YajatGhule/larp"
+REPO_URL="https://github.com/$REPO"
+API_URL="https://api.github.com/repos/$REPO/releases/latest"
+BIN_DIR="${1:-$HOME/.local/bin}"
+
+info() { printf '\033[1;34m::\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$*" >&2; }
+die()  { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
+
+CHECK_ONLY=0
+[[ "${1-}" == "--check" ]] && CHECK_ONLY=1
+
+# Get the latest release tag and download URL
+latest=$(curl -fsSL "$API_URL" 2>/dev/null | grep -o '"tag_name": "[^"]*"' | head -1 | cut -d'"' -f4)
+[[ -z "$latest" ]] && die "Could not fetch latest version from GitHub"
+
+# Get current version from the script
+current="v0"
+[[ -f "$BIN_DIR/larp" ]] && current=$(grep -m1 "^# larp version:" "$BIN_DIR/larp" 2>/dev/null || echo "v0")
+
+info "Current: $current"
+info "Latest:  $latest"
+
+if (( CHECK_ONLY )); then
+  exit 0
+fi
+
+if [[ "$current" == "$latest" ]]; then
+  info "Already up to date"
+  exit 0
+fi
+
+info "Updating from $current to $latest..."
+
+# Clone/pull the repo and run install
+TEMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+git clone --depth=1 --branch="$latest" "https://github.com/$REPO.git" "$TEMP_DIR" > /dev/null 2>&1 || \
+  git clone --depth=1 "https://github.com/$REPO.git" "$TEMP_DIR" > /dev/null 2>&1
+
+cd "$TEMP_DIR"
+./install.sh --prefix "${BIN_DIR%/bin}"
+
+info "Updated to $latest"
+info "Run 'larp' to start"
