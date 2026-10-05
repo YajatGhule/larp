@@ -1,0 +1,25 @@
+# Maintainer: Yajat Ghule <nlol26486@gmail.com>
+pkgname=larp-hyprland
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Hacker-style terminal desktop for Hyprland: fastfetch, pipes, cmatrix and cava in a 2x2 grid, with music'
+arch=('any')
+url='https://github.com/YajatGhule/larp'
+license=('MIT')
+depends=('bash' 'kitty' 'hypr-layout' 'fastfetch' 'pipes.sh' 'cmatrix' 'cava' 'wireplumber' 'libpulse')
+optdepends=('mpv: play music while larp runs'
+            'fish: larp-ws workspace launcher'
+            'jq: larp-ws workspace launcher'
+            'wtype: larp-ws workspace launcher')
+conflicts=('larp')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+  cd "larp-$pkgver"
+  install -Dm755 larp "$pkgdir/usr/bin/larp"
+  install -Dm755 larp-ws "$pkgdir/usr/bin/larp-ws"
+  install -Dm644 config.example "$pkgdir/usr/share/doc/$pkgname/config.example"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

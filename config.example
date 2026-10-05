@@ -1,0 +1,14 @@
+# larp config: copy to ~/.config/larp/config (sourced by bash)
+
+# Song to play while larp runs (empty = no music)
+AUDIO_PATH=""
+
+# Font size in the four panes
+FONT="8.0"
+
+# PipeWire/Pulse sink to play through (empty = default output).
+# List sinks with: pactl list short sinks
+SINK=""
+
+# Volume (%) to raise the output to
+VOLUME=70

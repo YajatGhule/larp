@@ -5,10 +5,10 @@ if test -z "$WAYLAND_DISPLAY"
     set -gx WAYLAND_DISPLAY wayland-1
 end
 if test -z "$XDG_RUNTIME_DIR"
-    set -gx XDG_RUNTIME_DIR /run/user/1000
+    set -gx XDG_RUNTIME_DIR /run/user/(id -u)
 end
 if test -z "$HYPRLAND_INSTANCE_SIGNATURE"
-    set -gx HYPRLAND_INSTANCE_SIGNATURE (ls -1 /run/user/1000/hypr/ 2>/dev/null | head -n 1)
+    set -gx HYPRLAND_INSTANCE_SIGNATURE (ls -1 $XDG_RUNTIME_DIR/hypr/ 2>/dev/null | head -n 1)
 end
 
 # Ensure paths

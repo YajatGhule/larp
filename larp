@@ -1,41 +1,71 @@
 #!/usr/bin/env bash
-# ── CONFIGURE THIS ─────────────────────
-AUDIO_PATH="/home/loopero/Downloads/Colliding Stars - Marzuku.mp3"
-FONT="${FONT:-8.0}"
+# larp: fastfetch, pipes, cmatrix and cava in a 2x2 Hyprland grid, with music.
+#
+# Settings are read from ${XDG_CONFIG_HOME:-~/.config}/larp/config (a bash file).
+# Environment variables of the same name override the config file.
+
+# ── DEFAULTS ───────────────────────────
+_env_audio="${AUDIO_PATH-}" _env_font="${FONT-}" _env_sink="${SINK-}" _env_volume="${VOLUME-}"
+AUDIO_PATH=""   # song to play; empty = no music
+FONT="8.0"      # font size in the panes
+SINK=""         # PipeWire/Pulse sink name; empty = default output
+VOLUME=70       # volume (%) to raise the output to
 # ───────────────────────────────────────
 
-# Set system and speaker volume to 70% smoothly (avoids quickshell illegal increment warning)
-ALC_SINK="alsa_output.pci-0000_00_1f.3.analog-stereo"
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/larp/config"
+# shellcheck source=/dev/null
+[[ -f "$CONFIG" ]] && source "$CONFIG"
+[[ -n "$_env_audio" ]] && AUDIO_PATH="$_env_audio"
+[[ -n "$_env_font" ]] && FONT="$_env_font"
+[[ -n "$_env_sink" ]] && SINK="$_env_sink"
+[[ -n "$_env_volume" ]] && VOLUME="$_env_volume"
+
+RUN_DIR="${XDG_RUNTIME_DIR:-/tmp}/larp"
+mkdir -p "$RUN_DIR"
+PID_FILE="$RUN_DIR/audio.pid"
+
+for cmd in kitty hypr-layout fastfetch pipes.sh cmatrix cava; do
+  command -v "$cmd" > /dev/null || { echo "larp: missing dependency: $cmd" >&2; exit 1; }
+done
+
+# Raise the volume smoothly (avoids quickshell illegal increment warning)
+set_volume() {
+  wpctl set-volume @DEFAULT_AUDIO_SINK@ "$1%" 2>/dev/null
+  pactl set-sink-volume "${SINK:-@DEFAULT_SINK@}" "$1%" 2>/dev/null
+}
 cur_vol=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | awk '{print int($2 * 100)}')
 [[ -z "$cur_vol" ]] && cur_vol=50
-target_vol=70
 
-if (( cur_vol < target_vol )); then
-  for (( v = cur_vol + 5; v <= target_vol; v += 5 )); do
-    wpctl set-volume @DEFAULT_AUDIO_SINK@ "${v}%" 2>/dev/null
-    pactl set-sink-volume "$ALC_SINK" "${v}%" 2>/dev/null
+if (( cur_vol < VOLUME )); then
+  for (( v = cur_vol + 5; v <= VOLUME; v += 5 )); do
+    set_volume "$v"
     sleep 0.03
   done
 fi
-wpctl set-volume @DEFAULT_AUDIO_SINK@ "${target_vol}%" 2>/dev/null
-pactl set-sink-volume "$ALC_SINK" "${target_vol}%" 2>/dev/null
-pactl set-sink-volume @DEFAULT_SINK@ "${target_vol}%" 2>/dev/null
+set_volume "$VOLUME"
+[[ -n "$SINK" ]] && pactl set-sink-volume @DEFAULT_SINK@ "${VOLUME}%" 2>/dev/null
 
 # Clean up any previous larp audio and visualizer processes
-[[ -f /tmp/larp_audio.pid ]] && kill "$(cat /tmp/larp_audio.pid)" 2>/dev/null
-pkill -f "mpv.*Colliding Stars" 2>/dev/null
-pkill -f /tmp/larp- 2>/dev/null
+[[ -f "$PID_FILE" ]] && kill "$(cat "$PID_FILE")" 2>/dev/null
+pkill -f "mpv .*larp-audio" 2>/dev/null
+pkill -f "$RUN_DIR/" 2>/dev/null
 pkill -f "pipes.sh" 2>/dev/null
 pkill -f "cmatrix" 2>/dev/null
 
-# Play song on ALC257 Analog speaker
-if [[ -f "$AUDIO_PATH" ]]; then
-  mpv --no-video --volume=70 --pause=no --audio-device="pipewire/$ALC_SINK" "$AUDIO_PATH" > /dev/null 2>&1 &
-  echo $! > /tmp/larp_audio.pid
+# Play the song
+if [[ -n "$AUDIO_PATH" && -f "$AUDIO_PATH" ]]; then
+  if command -v mpv > /dev/null; then
+    mpv_args=(--no-video --volume="$VOLUME" --pause=no --title=larp-audio)
+    [[ -n "$SINK" ]] && mpv_args+=(--audio-device="pipewire/$SINK")
+    mpv "${mpv_args[@]}" "$AUDIO_PATH" > /dev/null 2>&1 &
+    echo $! > "$PID_FILE"
+  else
+    echo "larp: mpv not found, skipping music" >&2
+  fi
 fi
 
-# Create a wrapper script to enforce the font size and margins for these terminal panes
-WRAPPER="/tmp/larp-wrapper"
+# Wrapper that enforces the font size and margins for these terminal panes
+WRAPPER="$RUN_DIR/wrapper"
 cat > "$WRAPPER" << EOF_WRAP
 #!/usr/bin/env bash
 exec kitty --override font_size=${FONT} --override window_margin_width=4 --override window_padding_width=0 --title larp-window "\$@"
@@ -43,46 +73,43 @@ EOF_WRAP
 chmod +x "$WRAPPER"
 
 # Pane 1 (Top-Left): Normal Fastfetch
-cat > /tmp/larp-fetch << 'EOF_FETCH'
+cat > "$RUN_DIR/fetch" << 'EOF_FETCH'
 #!/usr/bin/env bash
 fastfetch
 # Keep displayed cleanly; pressing any key or Ctrl+C opens interactive shell
 read -s -n 1 2>/dev/null || true
-exec "${SHELL:-fish}"
+exec "${SHELL:-bash}"
 EOF_FETCH
-chmod +x /tmp/larp-fetch
 
-# Pane 2 (Bottom-Left): Animated pipes
-cat > /tmp/larp-pipes << 'EOF_PIPES'
+# Pane 2 (Bottom-Left): Animated rainbow pipes (TERM override so tput works in kitty)
+cat > "$RUN_DIR/pipes" << 'EOF_PIPES'
 #!/usr/bin/env bash
-pipes.sh -f 100 -p 3 || bash
+TERM=xterm-256color pipes.sh -f 100 -p 3 -c 1 -c 2 -c 3 -c 4 -c 5 -c 6 -c 7 -R || bash
 EOF_PIPES
-chmod +x /tmp/larp-pipes
 
 # Pane 3 (Top-Right): CMatrix
-cat > /tmp/larp-cmatrix << 'EOF_CMATRIX'
+cat > "$RUN_DIR/cmatrix" << 'EOF_CMATRIX'
 #!/usr/bin/env bash
 cmatrix -b -r || bash
 EOF_CMATRIX
-chmod +x /tmp/larp-cmatrix
 
-# Pane 4 (Bottom-Right): CAVA audio visualizer
-cat > /tmp/larp-cava << 'EOF_CAVA'
+# Pane 4 (Bottom-Right): CAVA audio visualizer; closing it stops the music
+cat > "$RUN_DIR/cava" << EOF_CAVA
 #!/usr/bin/env bash
 stop_audio() {
-  [[ -f /tmp/larp_audio.pid ]] && kill "$(cat /tmp/larp_audio.pid)" 2>/dev/null
-  pkill -f "mpv.*Colliding Stars" 2>/dev/null
-  rm -f /tmp/larp_audio.pid 2>/dev/null
+  [[ -f "$PID_FILE" ]] && kill "\$(cat "$PID_FILE")" 2>/dev/null
+  pkill -f "mpv .*larp-audio" 2>/dev/null
+  rm -f "$PID_FILE" 2>/dev/null
 }
 trap stop_audio EXIT INT TERM HUP
 
 cava
 stop_audio
 EOF_CAVA
-chmod +x /tmp/larp-cava
+chmod +x "$RUN_DIR/fetch" "$RUN_DIR/pipes" "$RUN_DIR/cmatrix" "$RUN_DIR/cava"
 
 # Launch the 4 Hyprland windows in a 2x2 grid
 hypr-layout \
   --timeout 10000 \
   --terminal "$WRAPPER" \
-  'h(v({/tmp/larp-fetch}, {/tmp/larp-pipes}), v({/tmp/larp-cmatrix}, {/tmp/larp-cava}))'
+  "h(v({$RUN_DIR/fetch}, {$RUN_DIR/pipes}), v({$RUN_DIR/cmatrix}, {$RUN_DIR/cava}))"
