@@ -20,7 +20,7 @@ When you run it, it:
 ### Arch (AUR)
 
 ```sh
-yay -S larp-hyprland
+yay -S larp.exe
 ```
 
 This also installs everything larp needs, including `hypr-layout-bin` and `pipes.sh` from the AUR. To use `larp-ws`, also install `fish`, `jq` and `wtype`.
@@ -39,7 +39,7 @@ You need a running [Hyprland](https://hyprland.org/) session.
 
 ## Configure
 
-Settings live in `~/.config/larp/config`. Start from [`config.example`](config.example), which the AUR package installs to `/usr/share/doc/larp-hyprland/`:
+Settings live in `~/.config/larp/config`. Start from [`config.example`](config.example), which the AUR package installs to `/usr/share/doc/larp.exe/`:
 
 ```sh
 mkdir -p ~/.config/larp

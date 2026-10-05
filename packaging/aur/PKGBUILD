@@ -1,6 +1,6 @@
 # Maintainer: Yajat Ghule <yajatmay@gmail.com>
-pkgname=larp-hyprland
-pkgver=1.0.0
+pkgname=larp.exe
+pkgver=1.0.1
 pkgrel=1
 pkgdesc='Hacker-style terminal desktop for Hyprland: fastfetch, pipes, cmatrix and cava in a 2x2 grid, with music'
 arch=('any')
@@ -13,7 +13,7 @@ optdepends=('mpv: play music while larp runs'
             'wtype: larp-ws workspace launcher')
 conflicts=('larp')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('f6e7ebc50e5873444a6d5bc7a3c9b97760f0b96e8c16afa607961aa6bf29da79')
+sha256sums=('SKIP')
 
 package() {
   cd "larp-$pkgver"
