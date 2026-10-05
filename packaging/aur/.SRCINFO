@@ -1,6 +1,6 @@
-pkgbase = larp-hyprland
+pkgbase = larp.exe
 	pkgdesc = Hacker-style terminal desktop for Hyprland: fastfetch, pipes, cmatrix and cava in a 2x2 grid, with music
-	pkgver = 1.0.0
+	pkgver = 1.0.1
 	pkgrel = 1
 	url = https://github.com/YajatGhule/larp
 	arch = any
@@ -19,7 +19,7 @@ pkgbase = larp-hyprland
 	optdepends = jq: larp-ws workspace launcher
 	optdepends = wtype: larp-ws workspace launcher
 	conflicts = larp
-	source = larp-hyprland-1.0.0.tar.gz::https://github.com/YajatGhule/larp/archive/refs/tags/v1.0.0.tar.gz
-	sha256sums = f6e7ebc50e5873444a6d5bc7a3c9b97760f0b96e8c16afa607961aa6bf29da79
+	source = larp.exe-1.0.1.tar.gz::https://github.com/YajatGhule/larp/archive/refs/tags/v1.0.1.tar.gz
+	sha256sums = 1d3f5c72c7f5ac476dadad6d05a5f26f93f6ffba9befe1ac32401dd084e703a8
 
-pkgname = larp-hyprland
+pkgname = larp.exe

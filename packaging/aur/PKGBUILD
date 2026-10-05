@@ -13,7 +13,7 @@ optdepends=('mpv: play music while larp runs'
             'wtype: larp-ws workspace launcher')
 conflicts=('larp')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('1d3f5c72c7f5ac476dadad6d05a5f26f93f6ffba9befe1ac32401dd084e703a8')
 
 package() {
   cd "larp-$pkgver"
