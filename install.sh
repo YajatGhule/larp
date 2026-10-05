@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installer for larp on non-Arch distros (on Arch use the AUR: yay -S larp.exe).
+# Installer for larp.
 #
 #   ./install.sh                 install to ~/.local/bin
 #   ./install.sh --prefix /usr/local
@@ -64,7 +64,6 @@ fetch_verified() { # url sha256 dest
 if (( DEPS )); then
   pkgs=(kitty fastfetch cmatrix cava mpv wireplumber pulseaudio-utils fish jq wtype)
   if command -v pacman > /dev/null; then
-    warn "Arch detected: 'yay -S larp.exe' is the recommended install"
     pkgs=(kitty fastfetch cmatrix cava mpv wireplumber libpulse fish jq wtype)
     install_cmd=($SUDO pacman -S --needed --noconfirm)
   elif command -v apt-get > /dev/null; then

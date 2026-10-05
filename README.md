@@ -17,23 +17,20 @@ When you run it, it:
 
 ## Install
 
-### Arch (AUR)
-
-```sh
-yay -S larp.exe
-```
-
-This also installs everything larp needs, including `hypr-layout-bin` and `pipes.sh` from the AUR. To use `larp-ws`, also install `fish`, `jq` and `wtype`.
-
-### Other distros
-
 ```sh
 git clone https://github.com/YajatGhule/larp.git
 cd larp
 ./install.sh
 ```
 
-The script installs the dependencies with apt, dnf, zypper or xbps. It also installs `pipes.sh` and `hypr-layout`, and puts `larp` and `larp-ws` in `~/.local/bin`. The `hypr-layout` binary needs x86_64 and glibc 2.39 or newer. On older systems the script builds it with cargo instead. Options: `--prefix DIR`, `--no-deps`, `--uninstall`.
+The script automatically:
+- Detects your distro and installs dependencies (apt, dnf, zypper, xbps)
+- Downloads and installs `pipes.sh` and `hypr-layout`
+- Puts `larp` and `larp-ws` in `~/.local/bin`
+
+On x86_64 with glibc 2.39+, it uses the prebuilt `hypr-layout` binary. On older systems, it builds from source with cargo.
+
+**See [INSTALL.md](INSTALL.md) for detailed setup by distro, troubleshooting, and advanced options.**
 
 You need a running [Hyprland](https://hyprland.org/) session.
 
